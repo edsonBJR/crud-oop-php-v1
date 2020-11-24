@@ -1,14 +1,7 @@
 <?php
 
-    // Pagination
-    // page given in URL parameter, default page is one
-    $page = isset($_GET['page']) ? $_GET['page'] : 1;
-
-    // set number of records per page
-    $records_per_page = 5;
-
-    //calculate for the query LIMIT clause 
-    $from_record_num = ($records_per_page * $page) - $records_per_page;
+    // core.php holds pagination variable
+    include_once 'config/core.php';
 
     // retrieve records here
     // include database and objects files
@@ -23,75 +16,22 @@
     $product = new Product($db);
     $category = new Category($db);
 
-    // query products
-    $stmt = $product->readAll($from_record_num, $records_per_page);
-    $num = $stmt->rowCount();
-
     // set page header
     $page_title = "Read Products";
     include_once "layout_header.php";
+    
+    // query products
+    $stmt = $product->readAll($from_record_num, $records_per_page);
+    
+    // paging buttons will be here
+    // the page where this paging is used
+    $page_url = "index.php?";
 
-    // contents will be here
-    echo "<div class='right-button-margin'>
-        <a href='create_product.php' class='btn btn-default pull-right'>Create Product</a>
-    </div>";
+    // count all products in the database to calculate total pages
+    $total_rows = $product->countAll();
 
-    if($num>0) {
-
-        echo "<table class='table table-over table-responsive table-bordered'>";
-            echo "<tr>";
-                echo "<th>Product</th>";
-                echo "<th>Price</th>";
-                echo "<th>Description</th>";
-                echo "<th>Category</th>";
-                echo "<th>Actions</th>";
-            echo "</tr>";
-
-            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                extract($row);
-
-                echo "<tr>";
-                    echo "<td>{$name}</td>";
-                    echo "<td>{$price}</td>";
-                    echo "<td>{$description}</td>";
-                    echo "<td>";
-                        $category->id = $_category_id;
-                        $category->readName();
-                        echo $category->name;
-                    echo "</td>";
-                    echo "<td>";
-                        // read one, edit and delete button will be here
-                        echo "
-                            <a href='read_one.php?id={$id}' class='btn btn-primary left-margin'>
-                            <span class='glyphicon glyphicon-list'></span> Read
-                            </a>
-
-                            <a href='update_product.php?id={$id}' class='btn btn-info left-margin'>
-                            <span class='glyphicon glyphicon-list'></span> Edit
-                            </a>
-                        
-                            <a delete-id='{$id}' class='btn btn-danger deletect-object'>
-                            <span class='glyphicon glyphicon-list'></span> Delete
-                            </a>";
-                    echo "</td>";
-                echo "</tr>";
-            }
-        echo "</table>";
-
-        // paging buttons will be here
-        // the page where this paging is used
-        $page_url = "index.php?";
-
-        // count all products in the database to calculate total pages
-        $total_rows = $product->countAll();
-
-        // paging buttons here
-        include_once 'paging.php';
-    } 
-    // tell the user there are no products
-    else {
-        echo "<div class='alert alert-info'>No products found.</div>";
-    }
+    // read_template.php controls how the product list will be rendered
+    include_once "read_template.php";
 
     // set page footer
     include_once "layout_footer.php";
